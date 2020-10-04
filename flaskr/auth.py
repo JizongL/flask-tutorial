@@ -67,19 +67,18 @@ def login():
     return render_template('auth/login.html')
 
 
-@bp.before_app_first_request
+@bp.before_app_request
 def load_logged_in_user():
-    print('ran before app first request')
-    user_id = session.get('user_id')
+    """If a user id is stored in the session, load the user object from
+    the database into ``g.user``."""
+    user_id = session.get("user_id")
+
     if user_id is None:
-        print('ran inside if user is not in session')
         g.user = None
     else:
-        print('ran session contain userid')
-        g.user = get_db().execute(
-            'SELECT * FROM user WHERE id =?', (user_id,)
-        ).fetchone()
-        print(g.user, 'g.user')
+        g.user = (
+            get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
+        )
 
 
 @bp.route('/logout')
@@ -89,8 +88,7 @@ def logout():
 
 
 def login_required(view):
-    print('ran login required')
-
+    """View decorator that redirects anonymous users to the login page."""
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
